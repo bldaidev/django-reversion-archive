@@ -9,7 +9,7 @@ ENCODING = "utf-8"
 FILE_ROOT = getattr(settings, "VERSION_FILE_ROOT", settings.MEDIA_ROOT)
 DIRNAME = getattr(settings, "VERSION_DIRNAME", "versions")
 version_root = Path(FILE_ROOT) / DIRNAME
-version_root.mkdir(exist_ok=True)
+version_root.mkdir(parents=True, exist_ok=True)
 
 ARCHIVE_ENABLED = getattr(settings, "VERSION_ARCHIVE_ENABLED", False)
 
