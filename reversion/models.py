@@ -360,10 +360,11 @@ class Version(models.Model):
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
-        data = version_file.read(instance.pk)
-        if data:
-            instance._db_serialized_data= instance.serialized_data
-            instance.serialized_data = data
+        if instance.is_archived:
+            data = version_file.read(instance.pk)
+            if data:
+                instance._db_serialized_data= instance.serialized_data
+                instance.serialized_data = data
         return instance
 
     class Meta:
