@@ -23,7 +23,6 @@ from reversion.errors import RevertError
 from reversion.revisions import (_follow_relations_recursive,
                                  _get_content_type, _get_options)
 from reversion import version_file
-from reversion import archive as archived_mod
 
 
 logger = logging.getLogger(__name__)
@@ -79,13 +78,14 @@ class Revision(models.Model):
             return self.comment
 
     def restore_versions(self):
+        from reversion.archive import batched
         def f(version_ids):
             versions = Version.objects.filter(id__in=version_ids)
             for version in versions:
                 version.restore()
 
         version_ids = self.version_set.filter(is_archived=True).values_list("id", flat=True)
-        batched_version_ids = archived_mod.batched(version_ids, 100)
+        batched_version_ids = batched(version_ids, 100)
         with ThreadPoolExecutor() as executor:
             executor.map(
                 f,
