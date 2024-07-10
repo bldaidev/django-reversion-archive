@@ -23,7 +23,7 @@ from reversion.errors import RevertError
 from reversion.revisions import (_follow_relations_recursive,
                                  _get_content_type, _get_options)
 from reversion import version_file
-from reversion import archived as archived_mod
+from reversion import archive as archived_mod
 
 
 logger = logging.getLogger(__name__)
