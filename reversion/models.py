@@ -1,6 +1,7 @@
 from collections import defaultdict
 from itertools import chain, groupby
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 import django
 from django.apps import apps
@@ -22,6 +23,7 @@ from reversion.errors import RevertError
 from reversion.revisions import (_follow_relations_recursive,
                                  _get_content_type, _get_options)
 from reversion import version_file
+from reversion.archived import batched
 
 
 logger = logging.getLogger(__name__)
@@ -76,9 +78,26 @@ class Revision(models.Model):
         except LookupError:
             return self.comment
 
+    def restore_versions(self):
+        def f(version_ids):
+            versions = Version.objects.filter(id__in=version_ids)
+            for version in versions:
+                version.restore()
+
+        version_ids = self.version_set.filter(is_archived=True).values_list("id", flat=True)
+        batched_version_ids = batched(version_ids, 100)
+        with ThreadPoolExecutor() as executor:
+            executor.map(
+                f,
+                batched_version_ids,
+            )
+
     def revert(self, delete=False):
         # Group the models by the database of the serialized model.
         versions_by_db = defaultdict(list)
+
+        # Restore all archived versions before revert to speed up read
+        self.restore_versions()
         for version in self.version_set.iterator():
             versions_by_db[version.db].append(version)
         # For each db, perform a separate atomic revert.
