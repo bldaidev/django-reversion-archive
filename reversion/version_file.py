@@ -19,9 +19,6 @@ def get_file_path(pk):
 
 
 def read(pk):
-    if not ARCHIVE_ENABLED:
-        return
-
     file = get_file_path(pk)
     if file.exists():
         compressed = file.read_bytes()
